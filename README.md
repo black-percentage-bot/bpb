@@ -2,7 +2,7 @@
 
 A Python3 based Reddit bot calculating the true black pixel percentage of submissions, with comment support and an offline feature.
 
-The script processes offline or online images, check each pixel for their color value and calculate the percentage of true black pixels in the image.
+The script processes offline or online images, checks each pixel for their color value and calculate the percentage of true black pixels of the image.
 
 ## Disclaimer
 
