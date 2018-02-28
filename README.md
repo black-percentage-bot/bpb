@@ -1,8 +1,10 @@
-# BlackPixelPercentage Reddit Bot
+# Black Pixel Percentage Reddit Bot
 
 A Python3 based Reddit bot calculating the true black pixel percentage of submissions, with comment support and an offline feature.
 
 The script processes offline or online images, checks each pixel for their color value and calculate the percentage of true black pixels of the image.
+
+The repository's name and the scritp's filename `bpb` stands for black percentage bot, <sub>because I suck at making up my mind and use variations of the name everywhere.</sub>
 
 ## Disclaimer
 
@@ -23,12 +25,12 @@ With the comment mode enabled (-c/--comments), the script with process up to _ma
 
 Alternatively the script can be used to process a local file or a number of local files in a specified directory (-o/--offline).
 
-	usage: bpb.py [-h] [-s SUBREDDIT] [-c COMMENTS] [-m MAX] [-o OFFLINE] [-l LOG]
+	usage: bpb.py [-h] [-s SUBREDDIT] [-c] [-m MAX] [-o OFFLINE] [-l LOG]
 	              [-t TRIGGER] [-v] [-d]
 
 	(True)BlackPercentageBot v0.1
 	does things. Lacks an in-script description.
-	Source: https://gitlab.com/black-percentage-bot/bpb
+	Source: https://github.com/black-percentage-bot/bpb
 	Reddit: https://www.reddit.com/user/black-percentage-bot/
 	License: WTFPL
 
@@ -36,8 +38,7 @@ Alternatively the script can be used to process a local file or a number of loca
 	  -h, --help            show this help message and exit
 	  -s SUBREDDIT, --subreddit SUBREDDIT
 	                        Defines the Subreddit to process. Default: AmoledBackgrounds
-	  -c COMMENTS, --comments COMMENTS
-	                        Parses the comments, rather than the posts, used to answer comment requests. Default False
+	  -c, --comments        Parses the comments, rather than the posts, used to answer comment requests. Default False
 	  -m MAX, --max MAX     Defines the maximum number of processed posts (with -c/--comments, all comments in each post are processed). Default: 16
 	  -o OFFLINE, --offline OFFLINE
 	                        Parse a local directory or single image, instead of a defined Subreddit. Default: False
