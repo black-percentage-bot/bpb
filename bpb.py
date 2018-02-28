@@ -49,8 +49,12 @@ def calc_perc(u,m):
 
 def main():
 
+	# source code
+	source = "https://github.com/black-percentage-bot/bpb"
+	reddit = "https://www.reddit.com/user/black-percentage-bot"
+
 	title = "(True)BlackPercentageBot v0.1\n"
-	desc = "does things. Lacks an in-script description.\nSource: https://gitlab.com/black-percentage-bot/bpb\nReddit: https://www.reddit.com/user/black-percentage-bot/\nLicense: WTFPL"
+	desc = "does things. Lacks an in-script description.\nSource: "+str(source)+"\nReddit: "+str(reddit)+"/\nLicense: WTFPL"
 	def_sub = "AmoledBackgrounds"
 	def_off = False
 	def_log = "./bpb.log"
@@ -63,9 +67,6 @@ def main():
 
 	# Reddit API / praw settings (see praw.ini)
 	reddit = praw.Reddit('bpb')
-
-	# source code
-	source = "https://gitlab.com/black-percentage-bot/bpb"
 	
 	# bot message for comments
 	bot_msg = "\n\n---\n\n^*beep-boop*. ^I'm ^a ^bot. ^Post ^feedback, ^reports, ^requests ^or ^rants ^[here.]("+str(source)+")"
