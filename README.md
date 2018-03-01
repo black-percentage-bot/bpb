@@ -60,7 +60,7 @@ Please include a link to the comment you're refering to for reports.
 
  - Actually implement the comment function
  - Implement a process to interpret the ratelimit wait time, wait that long and then continue instead of exiting
- - Probably quite some bugfixes and performance issues
+ - Probably quite some bugfixes and performance (e.g. disk i/o) issues
  - `¯\_(ツ)_/¯`
 
 ## License

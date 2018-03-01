@@ -19,6 +19,23 @@ def check_log(p):
 	else:
 		raise argparse.ArgumentTypeError("The defined log file \""+str(p)+"\" is not a file or read-/writeable.")
 
+def check_intervall(i):
+
+	try:
+		if isinstance(int(i[:-1]),int):
+			if i.lower().endswith('s'):
+				return int(i[:-1])
+			elif i.lower().endswith('m'):
+				return int(i[:-1])*60
+			elif i.lower().endswith('h'):
+				return int(i[:-1])*60*60
+			else:
+				raise argparse.ArgumentTypeError("The defined intervall unit \""+str(i[-1])+"\" is not supported. Use 's' for seconds, 'm' for minutes or 'h' for hours (e.g -i 427s)")
+		else:
+			raise argparse.ArgumentTypeError("The defined intervall time \""+str(i[:-1])+"\" is not an integer.")
+	except ValueError as e:
+		raise argparse.ArgumentTypeError("The defined intervall time \""+str(i[:-1])+"\" is not an integer.")
+
 # calculate percentage
 # returns list of percentage, trueblack pixel count and total number of 
 # m defines the mode: "online" or "offline".
@@ -60,6 +77,7 @@ def main():
 	def_log = "./bpb.log"
 	def_com = False
 	def_max = 16
+	def_itv = False
 	def_tri = "calculate black percentage please"
 
 	# Supported image files
@@ -75,6 +93,7 @@ def main():
 	parser.add_argument("-s", "--subreddit", help="Defines the Subreddit to process. Default: "+str(def_sub), default=def_sub)
 	parser.add_argument("-c", "--comments", help="Parses the comments, rather than the posts, used to answer comment requests. Default "+str(def_com), default=def_com, action='store_true')
 	parser.add_argument("-m", "--max", help="Defines the maximum number of processed posts (with -c/--comments, all comments in each post are processed). Default: "+str(def_max), type=int)
+	parser.add_argument("-i", "--intervall", help="If defined, the bot will repeatedly run in intervalls of the defined number (3600s for seconds, 60m for minutes or 1h for hours) until manually stopped. Default: "+str(def_itv), type=check_intervall)
 	parser.add_argument("-o", "--offline", help="Parse a local directory or single image, instead of a defined Subreddit. Default: "+str(def_off), default=def_off, type=check_offline)
 	parser.add_argument("-l", "--log", help="Defines the log file with processed Reddit posts, using an absolute or relative path. Default: "+str(def_log), default=def_log, type=check_log)
 	parser.add_argument("-t", "--trigger", help="Defines the phrase in comments to trigger the bot. Requries -c/--comments. Default: "+str(def_tri), default=def_tri, type=str)
@@ -85,6 +104,7 @@ def main():
 	sub = args.subreddit
 	com = args.comments
 	max = args.max
+	itv = args.intervall
 	off = args.offline
 	log = args.log
 	ver = args.verbose
@@ -124,54 +144,69 @@ def main():
 		else:
 			processed_list = []
 
-	num = 0
-	for submission in subreddit.new(limit=max):
-		num+=1
-		if ver:
-			print("["+str(time.strftime("%H:%M:%S"))+"] ",end='')
-			print("Processing #"+str(num)+"... ",end='')
-		
-		if com:
-			print("Comment mode not implemented yet.")
-			exit(0)
-		else:
-			# Process post only if not already processed (see log) or bot is in comment mode
-			if (submission.id in processed_list) or com:
-				if ver:
-					print("Previosuly processed.")
+	rep_num = 0
+
+	while True:
+		num = 0
+		rep_num += 1
+
+		if ver and itv:
+			print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
+			print("Repetition #"+str(rep_num))
+		for submission in subreddit.new(limit=max):
+			num+=1
+			if ver:
+				print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
+				print("Processing submission #"+str(num)+"... ", end='', flush=True)
+			
+			if com:
+				print("Comment mode not implemented yet.")
+				exit(0)
 			else:
-				url = submission.url
-				if url.split('.')[-1] in image_file_exts:
+				# Process post only if not already processed (see log) or bot is in comment mode
+				if (submission.id in processed_list) or com:
 					if ver:
-						print("Found supported image ("+str(url)+"): ")
-
-					perc = calc_perc(url,"online")
-					
-					comment = "^^\(true\) Black pixel percentage: **"+str(round(perc[0],2))+"%** ^^^\("+str(perc[1])+"/"+str(perc[2])+"\)"+bot_msg
-					if not dbg:
-						try:
-							submission.reply(comment)
-						except praw.exceptions.APIException as e:
-							if "RATELIMIT" in str(e):
-								print("\n[ERROR] Reddit API ratelimit reached.")
-							if ver:
-								print("\n\n"+str(e))
-								exit(1)
-						if ver:
-							print("\t"+str(comment))
-					else:
-						print("[DEBUG] ["+str(time.strftime("%H:%M:%S"))+"]\n\t"+str(repr(comment))+"\n\tfor "+str(url))
-
+						print("Previosuly processed.")
 				else:
-					if ver:
-						print("No image or unsupported format. ("+str(url)+")")
+					url = submission.url
+					if url.split('.')[-1] in image_file_exts:
+						if ver:
+							print("Found supported image ("+str(url)+"): ")
 
-				if not com:
-					# add submission id to the log file
-					# not required in comment mode
-					with open(log, "a") as f:
-							f.write(submission.id + "\n")
+						perc = calc_perc(url,"online")
+						
+						comment = "^^\(true\) Black pixel percentage: **"+str(round(perc[0],2))+"%** ^^^\("+str(perc[1])+"/"+str(perc[2])+"\)"+bot_msg
+						if not dbg:
+							try:
+								submission.reply(comment)
+							except praw.exceptions.APIException as e:
+								if "RATELIMIT" in str(e):
+									print("\n[ERROR] Reddit API ratelimit reached.")
+								if ver:
+									print("\n\n"+str(e))
+									exit(1)
+							if ver:
+								print("\t"+str(comment))
+						else:
+							print("[DEBUG] ["+str(time.strftime("%H:%M:%S"))+"]\n\t"+str(repr(comment))+"\n\tfor "+str(url))
 
+					else:
+						if ver:
+							print("No image or unsupported format. ("+str(url)+")")
+
+					if not com:
+						# add submission id to the log file
+						# not required in comment mode
+						with open(log, "a") as f:
+								f.write(submission.id + "\n")
+		if not itv:
+			print("breaking?!")
+			break
+		else:
+			print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
+			print("Sleeping until "+str(time.strftime("%H:%M:%S", time.localtime(int(time.time()+itv))))+" for next repetition... ", end='', flush=True)
+			time.sleep(itv)
+			print("done.")
 
 if __name__ == "__main__":
 	main()
