@@ -147,7 +147,7 @@ def main():
 
 					perc = calc_perc(url,"online")
 					
-					comment = "^^\(true\) Black pixel percentage: **"+str(round(perc[0],4))+"%** ^^^\("+str(perc[1])+"/"+str(perc[2])+"\)"+bot_msg
+					comment = "^^\(true\) Black pixel percentage: **"+str(round(perc[0],2))+"%** ^^^\("+str(perc[1])+"/"+str(perc[2])+"\)"+bot_msg
 					if not dbg:
 						try:
 							submission.reply(comment)
