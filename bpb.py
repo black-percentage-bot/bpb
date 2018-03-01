@@ -197,10 +197,10 @@ def main():
 					if not com:
 						# add submission id to the log file
 						# not required in comment mode
+						processed_list.append(submission.id)
 						with open(log, "a") as f:
 								f.write(submission.id + "\n")
 		if not itv:
-			print("breaking?!")
 			break
 		else:
 			print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
