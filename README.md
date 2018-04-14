@@ -66,8 +66,8 @@ Please include a link to the comment you're refering to for reports.
 
 ## Issues
 
-	- Comment feature: Only the very first URL in a comment with the trigger request is considered
-	- Comment feature: Works only if the direct image URL is the very last thing in the *line* which features the trigger prhase.
+ - Comment feature: Only the very first URL in a comment with the trigger request is considered
+ - Comment feature: Works only if the direct image URL is the very last thing in the *line* which features the trigger prhase.
 
 ## In progress / ToDo's
 
