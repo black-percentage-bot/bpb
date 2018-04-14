@@ -145,7 +145,7 @@ def main():
 	reddit = praw.Reddit('bpb')
 	
 	# bot message for comments
-	bot_msg = "\n\n---\n\n^*beep-boop*. ^I'm ^a ^bot. ^Post ^feedback, ^reports, ^requests ^or ^rants ^[here.]("+str(source_url)+")"
+	bot_msg = "\n\n---\n\n^*beep-boop*. ^I'm ^a ^bot. ^Post ^feedback, ^reports, ^requests ^or ^rants ^[here.]("+str(source_url)+") ^^details ^^on ^^discrepancy ^^between ^^this ^^and ^^OLEDBuddy ^^included."
 
 	parser = argparse.ArgumentParser(description=title+desc,formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument("-s", "--subreddit", help="Defines the Subreddit to process. Default: "+str(def_sub), default=def_sub)
