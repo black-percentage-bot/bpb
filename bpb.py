@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import praw, os, requests, sys, argparse
+import praw, os, requests, sys, argparse, datetime, re
 from io import StringIO
 from PIL import Image
 import time
@@ -13,11 +13,69 @@ def check_offline(p):
 	else:
 		raise argparse.ArgumentTypeError("\""+str(p)+"\" is not a directory, a file or it's not readable.")
 
+# parse valid url(s) from string
+def get_url(s):
+	url = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', s)
+	return url
+
+# Ok so the same log file can be used for submissions and comments,
+# but if two instances on the same system use the same log file I may have a race condition/concurrency issue here.
 def check_log(p):
 	if os.path.isfile(p) and os.access(p, os.R_OK) and os.access(p, os.W_OK):
 		return p
 	else:
-		raise argparse.ArgumentTypeError("The defined log file \""+str(p)+"\" is not a file or read-/writeable.")
+		try:
+			open(p, 'a').close()
+		except Exception as e:
+			raise argparse.ArgumentTypeError("The defined log file \""+str(p)+"\" is not a file or read-/writeable.")
+			
+		if os.path.isfile(p) and os.access(p, os.R_OK) and os.access(p, os.W_OK):
+			return p
+		else:
+			raise argparse.ArgumentTypeError("The defined log file \""+str(p)+"\" is not a file or read-/writeable.")
+
+# Process all comments, takes loads of arguments
+# sub = Submission
+# tri = Trigger string
+# ver = Verbouse flag
+# prc = Processed list
+# log = Logfile
+# iex = Image extensions
+# msg = Bot message
+# dbg = Debug flag
+def process_all_comments(sub, tri, ver, prc, log, iex, msg, dbg):
+
+	sub.comments.replace_more(limit=None)
+	cn=0
+	for comment in sub.comments.list():
+		#print(comment.body)
+		cn+=1
+		if comment.id in prc:
+			continue
+		if tri in comment.body.lower():
+			url=get_url(comment.body)
+			if url:
+				if url[0].split('.')[-1] in iex:
+					print("\nValid request comment: ", str(url[0]))
+					
+					perc = calc_perc(url[0],"online")						
+					com = "^^\(true\) Black pixel percentage: **"+str(round(perc[0],2))+"%** ^^^\("+str(perc[1])+"/"+str(perc[2])+"\)"+msg
+					if not dbg:
+						comment.reply(com)
+					else:
+						print('[DEBUG] '+str(com))
+					
+					prc.append(comment.id)
+					with open(log, "a") as f:
+							f.write(comment.id + "\n")
+				elif ver:
+					print('Request comment with unsupported URL. '+str(url[0]))
+			elif ver:
+				print('Request comment without URL.')
+		if ver:
+			print('.',end='', flush=True)
+
+	return(cn)
 
 def check_intervall(i):
 
@@ -67,18 +125,18 @@ def calc_perc(u,m):
 def main():
 
 	# source code
-	source = "https://github.com/black-percentage-bot/bpb"
-	reddit = "https://www.reddit.com/user/black-percentage-bot"
+	source_url = "https://github.com/black-percentage-bot/bpb"
+	reddit_url = "https://www.reddit.com/user/black-percentage-bot"
 
-	title = "(True)BlackPercentageBot v0.1\n"
-	desc = "does things. Lacks an in-script description.\nSource: "+str(source)+"\nReddit: "+str(reddit)+"/\nLicense: WTFPL"
+	title = "(True)BlackPercentageBot v0.2\n"
+	desc = "does things. Lacks an in-script description.\nSource: "+str(source_url)+"\nReddit: "+str(reddit_url)+"/\nLicense: WTFPL"
 	def_sub = "AmoledBackgrounds"
 	def_off = False
 	def_log = "./bpb.log"
 	def_com = False
 	def_max = 16
 	def_itv = False
-	def_tri = "calculate black percentage please"
+	def_tri = "black percentage please"
 
 	# Supported image files
 	image_file_exts = ['png','jpg','jpeg','gif']
@@ -87,7 +145,7 @@ def main():
 	reddit = praw.Reddit('bpb')
 	
 	# bot message for comments
-	bot_msg = "\n\n---\n\n^*beep-boop*. ^I'm ^a ^bot. ^Post ^feedback, ^reports, ^requests ^or ^rants ^[here.]("+str(source)+")"
+	bot_msg = "\n\n---\n\n^*beep-boop*. ^I'm ^a ^bot. ^Post ^feedback, ^reports, ^requests ^or ^rants ^[here.]("+str(source_url)+")"
 
 	parser = argparse.ArgumentParser(description=title+desc,formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument("-s", "--subreddit", help="Defines the Subreddit to process. Default: "+str(def_sub), default=def_sub)
@@ -109,12 +167,15 @@ def main():
 	log = args.log
 	ver = args.verbose
 	dbg = args.debug
+	tri = args.trigger
+
+	start_time=datetime.datetime.utcnow()
 
 	if off:
 		if os.path.isfile(off):
 			perc = calc_perc(off,"offline")
 			if ver:
-				print("\""+str(off)+"\" has a (true) black pixel percentage of "+str(round(perc[0],4))+"% with "+str(perc[1])+" black pixels of "+str(perc[2])+".")
+				print("\""+str(off)+"\" has a (true) black pixel percentage of "+str(round(perc[0],2))+"% with "+str(perc[1])+" black pixels of "+str(perc[2])+".")
 			else:
 				print(str(round(perc[0],4))+"% "+str(off))
 		else:
@@ -123,7 +184,7 @@ def main():
 				if f.split('.')[-1] in image_file_exts:
 					perc = calc_perc(file,"offline")
 					if ver:
-						print("\""+str(file)+"\" has a (true) black pixel percentage of "+str(round(perc[0],4))+"% with "+str(perc[1])+" black pixels of "+str(perc[2])+".")
+						print("\""+str(file)+"\" has a (true) black pixel percentage of "+str(round(perc[0],2))+"% with "+str(perc[1])+" black pixels of "+str(perc[2])+".")
 					else:
 						print(str(round(perc[0],4))+"% "+str(file))
 				elif ver:
@@ -133,16 +194,11 @@ def main():
 	subreddit = reddit.subreddit(sub)
 	processed_list = []
 
-	if not com:
-		# read log to list
-		# not required in comment mode
-		if os.path.isfile(log):
-			with open(log, "r") as f:
-				processed_list = f.read()
-				processed_list = processed_list.split("\n")
-				processed_list = list(filter(None, processed_list))
-		else:
-			processed_list = []
+	# read log to list
+	with open(log, "r") as f:
+		processed_list = f.read()
+		processed_list = processed_list.split("\n")
+		processed_list = list(filter(None, processed_list))
 
 	rep_num = 0
 
@@ -152,19 +208,19 @@ def main():
 
 		if ver and itv:
 			print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
-			print("Repetition #"+str(rep_num))
-		for submission in subreddit.new(limit=max):
-			num+=1
-			if ver:
-				print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
-				print("Processing submission #"+str(num)+"... ", end='', flush=True)
-			
-			if com:
-				print("Comment mode not implemented yet.")
-				exit(0)
-			else:
-				# Process post only if not already processed (see log) or bot is in comment mode
-				if (submission.id in processed_list) or com:
+			print("Repetition #"+str(rep_num)+" - Uptime: "+str(datetime.timedelta(seconds=((datetime.datetime.utcnow()-start_time).total_seconds()))))
+
+		# process submissions
+		if not com:
+
+			for submission in subreddit.new(limit=max):
+				num+=1
+				if ver:
+					print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
+					print("Processing submission #"+str(num)+"... ", end='', flush=True)
+				
+				# Process post only if not already processed (see log)
+				if submission.id in processed_list:
 					if ver:
 						print("Previosuly processed.")
 				else:
@@ -172,9 +228,7 @@ def main():
 					if url.split('.')[-1] in image_file_exts:
 						if ver:
 							print("Found supported image ("+str(url)+"): ")
-
-						perc = calc_perc(url,"online")
-						
+						perc = calc_perc(url,"online")						
 						comment = "^^\(true\) Black pixel percentage: **"+str(round(perc[0],2))+"%** ^^^\("+str(perc[1])+"/"+str(perc[2])+"\)"+bot_msg
 						if not dbg:
 							try:
@@ -194,12 +248,44 @@ def main():
 						if ver:
 							print("No image or unsupported format. ("+str(url)+")")
 
-					if not com:
-						# add submission id to the log file
-						# not required in comment mode
-						processed_list.append(submission.id)
-						with open(log, "a") as f:
-								f.write(submission.id + "\n")
+					processed_list.append(submission.id)
+					with open(log, "a") as f:
+						f.write(submission.id + "\n")
+		# process comments
+		else: 
+			if ver:
+				print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
+				print("Processing all comments of up to five stickied submissions.")
+
+			num = 0
+			# process all comments in the stickies (max 5).
+			for submission in subreddit.hot(limit=5):
+				num+=1
+				if not submission.stickied:
+					break
+				if ver:
+					print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
+					print("Processing stickied submission #"+str(num)+"... ", end='', flush=True)
+				#def process_all_comments(sub, tri, ver, prc, log, iex, msg, dbg):
+				cn = process_all_comments(submission, tri, ver, processed_list, log, image_file_exts, bot_msg, dbg)
+				if ver:					
+					print(" ("+str(cn) +" comments)")
+
+			if ver:
+				print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
+				print("Processing all comments of the newest "+str(max)+" submissions.")
+
+			num = 0
+			# process all comments of the newest max posts
+			for submission in subreddit.new(limit=max):
+				num+=1
+				if ver:
+					print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
+					print("Processing submission #"+str(num)+"... ", end='', flush=True)
+				cn = process_all_comments(submission, tri, ver, processed_list, log, image_file_exts, bot_msg, dbg)
+				
+				if ver:					
+					print(" ("+str(cn) +" comments)")
 		if not itv:
 			break
 		else:

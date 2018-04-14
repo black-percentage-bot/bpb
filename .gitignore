@@ -109,4 +109,6 @@ venv.bak/
 
 # praw.ini
 praw.ini
-bpb.log
+# Pushing the log files to github anyways, so I prevent duplicates when switching systems.
+# bpb.log
+
