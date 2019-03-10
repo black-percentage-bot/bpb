@@ -7,6 +7,9 @@ import time
 from os import access, R_OK
 from os.path import isfile
 
+#Image.MAX_IMAGE_PIXELS = 1000000000
+#Image.MAX_IMAGE_PIXELS = 207370000                                                                                             
+
 def check_offline(p):
 	if (os.path.isfile(p) or os.path.isdir(p)) and os.access(p, os.R_OK):
 		return p
@@ -100,7 +103,13 @@ def check_intervall(i):
 def calc_perc(u,m):
 	tbpc = 0
 	if m == "online":
-		img = Image.open(requests.get(u, stream=True).raw)
+		try:
+			img = Image.open(requests.get(u, stream=True).raw)
+		except exception as e:
+			print("\n["+str(time.strftime("%H:%M:%S"))+"] [ERROR] ", end='', flush=True)
+			print(str(e))
+			print()
+			return "err"
 	else:
 		img = Image.open(u)
 	pic = img.load()
@@ -112,13 +121,21 @@ def calc_perc(u,m):
 			# I am definitely no image format wizard.
 			# For some reason pixels are sometimes defined as a list (e.g. true black is [0,0,0])
 			# and sometimes as a single int (e.g. true black is 0).
+			# Grayscale image true black seems to be [0,255].
 			# If you read this and know why, shoot me a message.
 			if isinstance(pic[w,h],int):
 				if pic[w,h] == 0:
 					tbpc += 1
 			else: 
-				if pic[w,h][0] == 0 and pic[w,h][1] == 0 and pic[w,h][2] == 0:
-					tbpc += 1
+				try:
+					if pic[w,h][2]:
+						if pic[w,h][0] == 0 and pic[w,h][1] == 0 and pic[w,h][2] == 0:
+							tbpc += 1
+				except IndexError:
+					# prolly grayscale: 0, 255
+
+					if pic[w,h][0] == 0 and pic[w,h][1] == 255:
+						tbpc += 1
 
 	return([tbpc/(total/100),tbpc,total])
 
@@ -205,6 +222,7 @@ def main():
 	while True:
 		num = 0
 		rep_num += 1
+		err = False
 
 		if ver and itv:
 			print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
@@ -218,7 +236,6 @@ def main():
 				if ver:
 					print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
 					print("Processing submission #"+str(num)+"... ", end='', flush=True)
-				
 				# Process post only if not already processed (see log)
 				if submission.id in processed_list:
 					if ver:
@@ -229,6 +246,9 @@ def main():
 						if ver:
 							print("Found supported image ("+str(url)+"): ")
 						perc = calc_perc(url,"online")						
+						if perc == err:
+							time.sleep(itv)
+							continue
 						comment = "^^\(true\) Black pixel percentage: **"+str(round(perc[0],2))+"%** ^^^\("+str(perc[1])+"/"+str(perc[2])+"\)"+bot_msg
 						if not dbg:
 							try:
