@@ -128,12 +128,11 @@ def calc_perc(u,m):
 					tbpc += 1
 			else: 
 				try:
-					if pic[w,h][2]:
+					if isinstance(pic[w,h][2],int):
 						if pic[w,h][0] == 0 and pic[w,h][1] == 0 and pic[w,h][2] == 0:
 							tbpc += 1
 				except IndexError:
 					# prolly grayscale: 0, 255
-
 					if pic[w,h][0] == 0 and pic[w,h][1] == 255:
 						tbpc += 1
 
