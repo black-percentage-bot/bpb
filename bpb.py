@@ -16,10 +16,22 @@ def check_offline(p):
 	else:
 		raise argparse.ArgumentTypeError("\""+str(p)+"\" is not a directory, a file or it's not readable.")
 
-# parse valid url(s) from string
+# parse valid url from string
+# only the first link in the string will be returned
 def get_url(s):
-	url = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', s)
-	return url
+    #previously used url matcher
+    url = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', s)
+    return url
+
+	#u=""
+    #if isinstance(s, String):
+
+     #   print("ADFASDFASDF:" +str(s))
+      #  u=re.search("(?P<url>https?://[^\s]+)", s).group("url")
+    	# if markdown links are used, links are pollutted
+       # if u.endswith(')') or u.endswith(']'):
+       #     return u[:-1]
+    #return u
 
 # Ok so the same log file can be used for submissions and comments,
 # but if two instances on the same system use the same log file I may have a race condition/concurrency issue here.
