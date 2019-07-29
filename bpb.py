@@ -243,6 +243,7 @@ def main():
 		if not com:
 
 			for submission in subreddit.new(limit=max):
+				#print("SUBMISSION-ID: "+str(submission.id))
 				num+=1
 				if ver:
 					print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
