@@ -8,7 +8,7 @@ from os import access, R_OK
 from os.path import isfile
 
 #Image.MAX_IMAGE_PIXELS = 1000000000
-#Image.MAX_IMAGE_PIXELS = 207370000                                                                                             
+Image.MAX_IMAGE_PIXELS = 189000001                                                                                             
 
 def check_offline(p):
 	if (os.path.isfile(p) or os.path.isdir(p)) and os.access(p, os.R_OK):
@@ -136,6 +136,7 @@ def calc_perc(u,m):
 			# Grayscale image true black seems to be [0,255].
 			# If you read this and know why, shoot me a message.
 			if isinstance(pic[w,h],int):
+				#print(str(pic))
 				if pic[w,h] == 0:
 					tbpc += 1
 			else: 
@@ -247,7 +248,7 @@ def main():
 				num+=1
 				if ver:
 					print("["+str(time.strftime("%H:%M:%S"))+"] ", end='', flush=True)
-					print("Processing submission #"+str(num)+"... ", end='', flush=True)
+					print("Processing submission #"+str(num)+" ("+str(submission.id)+")... ", end='', flush=True)
 				# Process post only if not already processed (see log)
 				if submission.id in processed_list:
 					if ver:
