@@ -7,6 +7,19 @@ import time
 from os import access, R_OK
 from os.path import isfile
 
+'''
+CMYK_https://i.redd.it/vjbm1v5bzmu41.jpg
+CMYK_https://i.redd.it/75c46uk9zmu41.jpg
+L_https://i.redd.it/xp8gfz9um4q41.png
+L_https://i.vgy.me/nsnBZg.png
+P_https://i.redd.it/fdiqg8o1q0u41.png
+P_https://i.redd.it/qfrbzt4s7mu41.png
+RGB_https://i.imgur.com/z4kHE2m.jpg
+RGB_https://i.redd.it/eta21enb5pw41.jpg
+RGBA_https://i.imgur.com/NR7hfBv.png
+RGBA_https://i.redd.it/xumafr982ov41.png
+'''
+
 #Image.MAX_IMAGE_PIXELS = 1000000000
 Image.MAX_IMAGE_PIXELS = 189000001                                                                                             
 
