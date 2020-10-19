@@ -60,7 +60,7 @@ Alternatively the script can be used to process a local file or a number of loca
 
 ## Feedback, reports, requests or rants
 
-Open an issue or send me an e-mail (blackpercentagebot <sub>_0x40_</sub> tuta <sub>_0x2e_</sub> io).
+Open an issue or send me an e-mail (bpbot <sub>_0x40_</sub> tutanota <sub>_0x2e_</sub> com).
 
 Please include a link to the comment you're refering to for reports.
 
